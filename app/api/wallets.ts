@@ -31,10 +31,7 @@ export const getWalletBalances = async (
  * @param walletId The ID of the wallet to set as default
  * @returns The updated wallet object
  */
-export const setDefaultWallet = async (
-  walletId: string,
-  walletId?: any
-): Promise<Wallet> => {
+export const setDefaultWallet = async (walletId: string): Promise<Wallet> => {
   const response = await copperxAPI.post<ApiResponse<Wallet>>(
     "/api/wallets/default",
     { walletId }

@@ -1,24 +1,25 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 // index.ts
-import { Telegraf } from "telegraf";
+import { Context, MiddlewareFn, Telegraf, session } from "telegraf";
 import { loadEnv } from "./app/config/env";
-import { setupCommands } from "./app/bot/commands";
-import { stageMiddleware } from "./app/bot/scenes";
-
-// Import MyContext from commands.ts for consistency
-import { MyContext } from "./app/bot/commands";
+import { MyContext, setupCommands } from "./app/bot/commands";
+import { stage } from "./app/bot/scenes";
+import { Update } from "telegraf/types";
 
 // Load environment variables
 const { TELEGRAM_BOT_TOKEN } = loadEnv();
 
-// Initialize bot with MyContext from commands.ts
-const bot = new Telegraf<MyContext>(TELEGRAM_BOT_TOKEN);
+// Initialize bot
+const bot = new Telegraf(TELEGRAM_BOT_TOKEN);
 
-// Apply scene middleware with type assertion to match MyContext
-bot.use(stageMiddleware as any); // Temporary fallback; refine if needed
+// Register session middleware (required for scenes to work)
+bot.use(session());
 
-// Setup commands and handlers
-setupCommands(bot);
+// Register stage middleware
+bot.use(stage.middleware() as MiddlewareFn<Context<Update>>);
+
+// Setup commands and handlers after all middlewares are applied
+setupCommands(bot as unknown as Telegraf<MyContext>);
 
 // Launch the bot
 bot

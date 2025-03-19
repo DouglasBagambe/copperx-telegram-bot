@@ -59,8 +59,11 @@ const loginScene = new Scenes.WizardScene<Scenes.WizardContext>(
     (ctx.wizard.state as BotWizardSession).email = email;
 
     try {
-      const { sid } = await requestEmailOTP(email);
-      (ctx.wizard.state as BotWizardSession).sid = sid;
+      const response = await requestEmailOTP(email);
+
+      // Store the session ID
+      (ctx.wizard.state as BotWizardSession).sid = response.sid;
+
       await ctx.reply(
         `OTP sent to ${email}. Please enter the code you received:`
       );
@@ -87,26 +90,35 @@ const loginScene = new Scenes.WizardScene<Scenes.WizardContext>(
     }
 
     try {
-      const { accessToken } = await authenticateWithOTP(email, otp, sid);
+      const authResponse = await authenticateWithOTP(email, otp, sid);
 
-      // Calculate expiration date
+      // Calculate expiration date (assuming 24 hours)
       const expireAt = new Date();
-      const expiresIn = 86400; // Default to 24h
-      expireAt.setSeconds(expireAt.getSeconds() + expiresIn);
+      expireAt.setHours(expireAt.getHours() + 24);
 
       // Save session data
-      const organizationId = "yourOrganizationId"; // Initialize organizationId
       setSession(ctx.chat!.id, {
-        accessToken,
-        organizationId,
+        accessToken: authResponse.accessToken,
+        organizationId: authResponse.organizationId || "",
         expireAt: expireAt.toISOString(),
       });
 
       await ctx.reply("Login successful! ✅", mainMenuKeyboard());
       return ctx.scene.leave();
-    } catch (error) {
+    } catch (error: any) {
       console.error("OTP verification error:", error);
-      await ctx.reply("Invalid OTP or verification failed. Please try again.");
+      const errorMessage =
+        error.message || "Invalid OTP or verification failed";
+
+      // Check if it's the "not latest OTP" error
+      if (errorMessage.includes("not latest otp")) {
+        await ctx.reply("Your OTP code has expired. Please request a new one.");
+        return ctx.scene.enter(LOGIN_SCENE_ID); // Restart the login process
+      }
+
+      await ctx.reply(
+        `Authentication failed: ${errorMessage}. Please try again.`
+      );
       return ctx.scene.leave();
     }
   }
@@ -440,7 +452,7 @@ const withdrawScene = new Scenes.WizardScene<Scenes.WizardContext>(
   }
 );
 
-// Batch send scene (new feature)
+// Batch send scene
 const batchSendScene = new Scenes.WizardScene<Scenes.WizardContext>(
   BATCH_SEND_SCENE_ID,
   // Step 1: Explain and request CSV format
@@ -569,7 +581,7 @@ const batchSendScene = new Scenes.WizardScene<Scenes.WizardContext>(
 );
 
 // Set up stage with all scenes
-export const stage = new Scenes.Stage([
+export const stage = new Scenes.Stage<Scenes.WizardContext>([
   loginScene,
   sendScene,
   sendWalletScene,

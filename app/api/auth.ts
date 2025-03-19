@@ -9,11 +9,24 @@ import { ApiResponse, User, OTPRequest, OTPAuthentication, KYC } from "./types";
  * @returns A session ID to be used when verifying the OTP
  */
 export const requestEmailOTP = async (email: string): Promise<OTPRequest> => {
-  const response = await copperxAPI.post<ApiResponse<OTPRequest>>(
-    "/api/auth/email-otp/request",
-    { email }
-  );
-  return response.data;
+  try {
+    const response = await copperxAPI.post<any>("/api/auth/email-otp/request", {
+      email,
+    });
+
+    // Check if the response has a sid property directly or in a data property
+    if (response.data && response.data.sid) {
+      return response.data; // Direct response
+    } else if (response.data && response.data.data && response.data.data.sid) {
+      return response.data.data; // Nested in data property
+    } else {
+      console.error("Invalid response from API:", response.data);
+      throw new Error("API returned invalid response format");
+    }
+  } catch (error) {
+    console.error("Error in requestEmailOTP:", error);
+    throw error; // Re-throw to handle in the scene
+  }
 };
 
 /**
@@ -28,15 +41,27 @@ export const authenticateWithOTP = async (
   otp: string,
   sid: string
 ): Promise<OTPAuthentication> => {
-  const response = await copperxAPI.post<ApiResponse<OTPAuthentication>>(
-    "/api/auth/email-otp/authenticate",
-    { email, otp, sid }
-  );
+  try {
+    const response = await copperxAPI.post<ApiResponse<OTPAuthentication>>(
+      "/api/auth/email-otp/authenticate",
+      { email, otp, sid }
+    );
 
-  // Set the access token in the API client
-  copperxAPI.setAccessToken(response.data.accessToken);
-
-  return response.data;
+    // Set the access token in the API client
+    if (response.data && response.data.accessToken) {
+      copperxAPI.setAccessToken(response.data.accessToken);
+      return response.data;
+    } else {
+      throw new Error("Invalid authentication response");
+    }
+  } catch (error: any) {
+    // Check if the error has a response with data
+    if (error.response && error.response.data) {
+      console.error("API Error:", error.response.data);
+      throw new Error(error.response.data.message || "Authentication failed");
+    }
+    throw error;
+  }
 };
 
 /**

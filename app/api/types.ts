@@ -8,6 +8,7 @@ import { Context } from "telegraf";
 
 export interface MyContext extends Context {}
 export interface ApiResponse<T> {
+  [x: string]: any;
   status: string;
   data: T;
 }
@@ -77,6 +78,7 @@ export interface OTPRequest {
 }
 
 export interface OTPAuthentication {
+  [x: string]: string;
   accessToken: string;
   refreshToken: string;
   expireAt: string;

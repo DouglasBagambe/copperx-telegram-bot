@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /// app/bot/commands.ts
 
-import { Telegraf, Context, Scenes, Markup } from "telegraf";
+import { Markup } from "telegraf";
 // import { Update } from "telegraf/typings/core/types/typegram";
 import * as authAPI from "../api/auth";
 import * as walletsAPI from "../api/wallets";
@@ -21,6 +21,8 @@ import {
   transferMenuKeyboard,
   walletsKeyboard,
 } from "./menus";
+import { Telegraf, Context } from "telegraf";
+import { Scenes } from "telegraf";
 
 // Define custom context including scene support
 interface CustomSession {
@@ -35,7 +37,11 @@ interface CustomSession {
   };
 }
 
-export type MyContext = Scenes.SceneContext & {
+// export type MyContext = Scenes.SceneContext & {
+//   session: CustomSession;
+// };
+
+export type MyContext = Scenes.WizardContext & {
   session: CustomSession;
 };
 
@@ -260,7 +266,24 @@ Support: https://t.me/copperxcommunity/2183
     await ctx.answerCbQuery();
 
     if (data === "login") {
-      ctx.scene.enter("loginScene");
+      // Check if stage is properly registered
+      if (!ctx.scene) {
+        console.error("Scene context is undefined!");
+        await ctx.reply(
+          "Sorry, there's an issue with the login system. Please try again later."
+        );
+        return;
+      }
+
+      try {
+        // Enter login scene
+        await ctx.scene.enter("loginScene");
+      } catch (error) {
+        console.error("Error entering login scene:", error);
+        await ctx.reply(
+          "Sorry, there was a problem processing your request. Please try again later."
+        );
+      }
     } else if (data === "help") {
       bot.telegram.sendMessage(ctx.chat!.id, "/help");
     } else if (data.startsWith("setdefault_")) {
@@ -268,7 +291,7 @@ Support: https://t.me/copperxcommunity/2183
         return ctx.reply("Please login first with /login.");
       const walletId = data.split("_")[1];
       try {
-        await walletsAPI.setDefaultWallet(session.accessToken, walletId);
+        await walletsAPI.setDefaultWallet(walletId);
         setSession(ctx.chat!.id, { ...session, defaultWalletId: walletId });
         await ctx.reply("Default wallet set! ✅");
       } catch (error) {
