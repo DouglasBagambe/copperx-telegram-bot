@@ -1,4 +1,12 @@
+/* eslint-disable @typescript-eslint/no-empty-object-type */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+// app/api/types.ts
+
 // API Response Types
+
+import { Context } from "telegraf";
+
+export interface MyContext extends Context {}
 export interface ApiResponse<T> {
   status: string;
   data: T;
@@ -76,6 +84,7 @@ export interface OTPAuthentication {
 
 // Payee Types
 export interface Payee {
+  [x: string]: any;
   id: string;
   nickName: string;
   accountType: string;
