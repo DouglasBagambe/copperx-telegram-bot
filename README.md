@@ -1,36 +1,54 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# CopperX Telegram Bot
 
-## Getting Started
+A Telegram bot for managing crypto payouts with Copperx, built for the Superteam Earn "Telegram Bot for Copperx Payout 🤖 - Build with AI" bounty.
 
-First, run the development server:
+## Features
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+- 🔐 **Authentication & Account Management**: Login, view profile, check KYC/KYB status.
+- 👛 **Wallet Management**: View balances, set default wallet, deposit funds, view transaction history.
+- 💸 **Fund Transfers**: Send USDC to email or wallet, withdraw to bank, view recent transactions.
+- 🔔 **Deposit Notifications**: Real-time notifications via Pusher.
+- 💬 **Bot Interaction**: Intuitive commands, interactive menus, inline keyboards, help command.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Setup Instructions
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+1. Clone the repository:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+   ```bash
+   git clone https://github.com/your-username/copperx-telegram-bot.git
+   cd copperx-telegram-bot
+   Install dependencies:
+   bash
+   ```
 
-## Learn More
+2. yarn install
+   Set up environment variables in a .env file:
 
-To learn more about Next.js, take a look at the following resources:
+   ```bash
+   TELEGRAM_BOT_TOKEN=your-telegram-bot-token
+   COPPERX_API_KEY=your-copperx-api-key
+   VITE_PUSHER_KEY=e089376087cac1a62785
+   VITE_PUSHER_CLUSTER=ap1
+   bash
+   ```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+3. Run the bot locally:
+   yarn dev
+   Deploy to Render (see docs/setup.md for detailed instructions).
+4. Live Demo
+   Interact with the bot: [CopperX](https://t.me/CopperxPayout_01_Bot)
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+5. Documentation
+   Setup Instructions: docs/api.md
+   Command Reference: docs/commands.md
+   API Integration Details: docs/setup.md
 
-## Deploy on Vercel
+## Local Development
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+1. Clone the repository and install dependencies as shown in the README.
+2. Set up environment variables in a `.env` file (see README for details).
+3. Run the bot:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+   ```bash
+   yarn dev
+   ```

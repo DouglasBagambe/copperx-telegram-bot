@@ -7,10 +7,10 @@ import { stage } from "./app/bot/scenes";
 import { Update } from "telegraf/types";
 
 // Load environment variables
-const { TELEGRAM_BOT_TOKEN } = loadEnv();
+const { TELEGRAM_BOT_TOKEN, NODE_ENV } = loadEnv();
 
 // Initialize bot
-const bot = new Telegraf(TELEGRAM_BOT_TOKEN);
+const bot = new Telegraf<MyContext>(TELEGRAM_BOT_TOKEN);
 
 // Register session middleware (required for scenes to work)
 bot.use(session());
@@ -19,19 +19,37 @@ bot.use(session());
 bot.use(stage.middleware() as MiddlewareFn<Context<Update>>);
 
 // Setup commands and handlers after all middlewares are applied
-setupCommands(bot as unknown as Telegraf<MyContext>);
+setupCommands(bot);
 
-// Launch the bot
-bot
-  .launch()
-  .then(() => console.log("Copperx Payout Bot started successfully"))
-  .catch((err) => {
-    console.error("Failed to launch bot:", err);
-    process.exit(1);
-  });
+// Export a handler for Render (webhook mode)
+export default async (req: any, res: any) => {
+  try {
+    if (req.method === "POST") {
+      // Handle Telegram webhook updates
+      await bot.handleUpdate(req.body);
+      res.status(200).end();
+    } else {
+      res.status(200).send("CopperX Telegram Bot");
+    }
+  } catch (err) {
+    console.error("Webhook error:", err);
+    res.status(500).send("Internal Server Error");
+  }
+};
 
-// Handle graceful shutdown
-process.once("SIGINT", () => bot.stop("SIGINT"));
-process.once("SIGTERM", () => bot.stop("SIGTERM"));
+// For local development, use polling mode
+if (NODE_ENV !== "production") {
+  bot
+    .launch()
+    .then(() =>
+      console.log("Copperx Payout Bot started successfully in polling mode")
+    )
+    .catch((err) => {
+      console.error("Failed to launch bot:", err);
+      process.exit(1);
+    });
 
-export default bot;
+  // Handle graceful shutdown
+  process.once("SIGINT", () => bot.stop("SIGINT"));
+  process.once("SIGTERM", () => bot.stop("SIGTERM"));
+}
