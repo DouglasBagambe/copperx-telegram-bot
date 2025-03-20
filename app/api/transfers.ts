@@ -1,95 +1,97 @@
 // app/api/transfers.ts
-
 import copperxAPI from "./copperx";
-import { ApiResponse, Transfer, Payee } from "./types";
+import { Transfer, Payee } from "./types";
 
 /**
- * Get transfer history
- * @param page Page number (default: 1)
- * @param limit Number of items per page (default: 10)
- * @returns Array of transfer objects
+ * Get list of transfers
+ * @param accessToken Access token for authentication
+ * @param page Page number for pagination
+ * @param limit Number of items per page
+ * @returns List of transfers
  */
 export const getTransfers = async (
+  accessToken: string,
   page: number = 1,
   limit: number = 10
 ): Promise<Transfer[]> => {
-  const response = await copperxAPI.get<ApiResponse<Transfer[]>>(
-    `/api/transfers?page=${page}&limit=${limit}`
+  const headers: Record<string, string> = {};
+  if (accessToken) headers.Authorization = `Bearer ${accessToken}`;
+
+  const response = await copperxAPI.get<Transfer[]>(
+    `/api/transfers?page=${page}&limit=${limit}`,
+    { headers }
   );
-  return response.data;
+  return response;
 };
 
 /**
- * Send funds to an email address
+ * Send USDC to an email address
  * @param email Recipient email
- * @param amount Amount to send (in USDC)
- * @returns Created transfer object
+ * @param amount Amount in USDC
+ * @returns Transfer details
  */
 export const sendToEmail = async (
   email: string,
   amount: string
 ): Promise<Transfer> => {
-  const response = await copperxAPI.post<ApiResponse<Transfer>>(
-    "/api/transfers/send",
-    { email, amount }
-  );
-  return response.data;
+  const response = await copperxAPI.post<Transfer>("/api/transfers/email", {
+    email,
+    amount,
+  });
+  return response;
 };
 
 /**
- * Send funds to an external wallet address
+ * Send USDC to a wallet address
  * @param walletAddress Recipient wallet address
- * @param amount Amount to send (in USDC)
- * @returns Created transfer object
+ * @param amount Amount in USDC
+ * @returns Transfer details
  */
 export const sendToWallet = async (
   walletAddress: string,
   amount: string
 ): Promise<Transfer> => {
-  const response = await copperxAPI.post<ApiResponse<Transfer>>(
-    "/api/transfers/wallet-withdraw",
-    { walletAddress, amount }
-  );
-  return response.data;
+  const response = await copperxAPI.post<Transfer>("/api/transfers/wallet", {
+    walletAddress,
+    amount,
+  });
+  return response;
 };
 
 /**
- * Withdraw funds to a bank account
- * @param payeeId ID of the payee (bank account)
- * @param amount Amount to withdraw (in USDC)
- * @returns Created transfer object
+ * Withdraw USDC to a bank account
+ * @param payeeId Payee ID for the bank account
+ * @param amount Amount in USDC
+ * @returns Transfer details
  */
 export const withdrawToBank = async (
   payeeId: string,
   amount: string
 ): Promise<Transfer> => {
-  const response = await copperxAPI.post<ApiResponse<Transfer>>(
-    "/api/transfers/offramp",
-    { payeeId, amount }
-  );
-  return response.data;
+  const response = await copperxAPI.post<Transfer>("/api/transfers/bank", {
+    payeeId,
+    amount,
+  });
+  return response;
 };
 
 /**
- * Get all payees (bank accounts) for the authenticated user
- * @returns Array of payee objects
+ * Get list of payees (bank accounts)
+ * @returns List of payees
  */
 export const getPayees = async (): Promise<Payee[]> => {
-  const response = await copperxAPI.get<ApiResponse<Payee[]>>("/api/payees");
-  return response.data;
+  const response = await copperxAPI.get<Payee[]>("/api/payees");
+  return response;
 };
 
 /**
- * Send bulk transfers
- * @param transfers Array of transfers to send
- * @returns Array of created transfer objects
+ * Send batch transfers to multiple recipients
+ * @param transfers List of transfers (email and amount)
+ * @returns Batch transfer result
  */
 export const sendBatchTransfers = async (
-  transfers: { email: string; amount: string }[]
-): Promise<Transfer[]> => {
-  const response = await copperxAPI.post<ApiResponse<Transfer[]>>(
-    "/api/transfers/send-batch",
-    { transfers }
-  );
-  return response.data;
+  transfers: Array<{ email: string; amount: string }>
+): Promise<any> => {
+  const response = await copperxAPI.post("/api/transfers/batch", { transfers });
+  return response;
 };

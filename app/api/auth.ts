@@ -1,7 +1,6 @@
 // app/api/auth.ts
-
 import copperxAPI from "./copperx";
-import { ApiResponse, User, OTPRequest, OTPAuthentication, KYC } from "./types";
+import { User, OTPRequest, OTPAuthentication, KYC } from "./types";
 
 /**
  * Request an OTP to be sent to the user's email
@@ -13,19 +12,29 @@ export const requestEmailOTP = async (email: string): Promise<OTPRequest> => {
     const response = await copperxAPI.post<any>("/api/auth/email-otp/request", {
       email,
     });
+    console.log("Full API response:", response);
 
-    // Check if the response has a sid property directly or in a data property
-    if (response.data && response.data.sid) {
-      return response.data; // Direct response
-    } else if (response.data && response.data.data && response.data.data.sid) {
-      return response.data.data; // Nested in data property
-    } else {
-      console.error("Invalid response from API:", response.data);
-      throw new Error("API returned invalid response format");
+    // Check if the response itself contains sid (not response.data)
+    if (response && response.sid) {
+      return { sid: response.sid };
     }
-  } catch (error) {
-    console.error("Error in requestEmailOTP:", error);
-    throw error; // Re-throw to handle in the scene
+
+    // Fallback in case the structure is different (e.g., response.data.sid)
+    if (response.data && response.data.sid) {
+      return { sid: response.data.sid };
+    }
+
+    throw new Error("Sid not found in API response");
+  } catch (error: any) {
+    console.error("Error in requestEmailOTP:", error.response?.data || error);
+    const errorMessage =
+      error.response?.data?.message || error.message || "Failed to request OTP";
+    if (error.code === "ETIMEDOUT" || error.code === "ENETUNREACH") {
+      throw new Error(
+        "Network error: Unable to reach the server. Please check your internet connection and try again."
+      );
+    }
+    throw new Error(errorMessage);
   }
 };
 
@@ -42,31 +51,51 @@ export const authenticateWithOTP = async (
   sid: string
 ): Promise<OTPAuthentication> => {
   try {
-    const response = await copperxAPI.post<ApiResponse<OTPAuthentication>>(
+    const response = await copperxAPI.post<any>(
       "/api/auth/email-otp/authenticate",
-      { email, otp, sid }
+      {
+        email,
+        otp,
+        sid,
+      }
     );
 
-    // Set the access token in the API client
-    if (response.data && response.data.accessToken) {
+    if (response && response.accessToken) {
+      copperxAPI.setAccessToken(response.accessToken);
+      return response;
+    }
+
+    // Fallback in case the structure is different (e.g., response.data.accessToken)
+    if (response.data && response.accessToken) {
       copperxAPI.setAccessToken(response.data.accessToken);
       return response.data;
-    } else {
-      throw new Error("Invalid authentication response");
     }
+
+    throw new Error("Invalid authentication response");
   } catch (error: any) {
-    // Check if the error has a response with data
-    if (error.response && error.response.data) {
-      console.error("API Error:", error.response.data);
-      throw new Error(error.response.data.message || "Authentication failed");
+    console.error("API Error:", error.response?.data || error);
+    const errorMessage =
+      error.response?.data?.message || "Authentication failed";
+
+    if (errorMessage.includes("Otp is not latest otp")) {
+      throw new Error(
+        "OTP code is not the latest one. Please request a new OTP."
+      );
     }
-    throw error;
+
+    if (error.code === "ETIMEDOUT" || error.code === "ENETUNREACH") {
+      throw new Error(
+        "Network error: Unable to reach the server. Please check your internet connection and try again."
+      );
+    }
+
+    throw new Error(errorMessage);
   }
 };
 
 /**
  * Get the current user's profile information
- * @param accessToken Optional access token (will use default if not provided)
+ * @param accessToken Optional access token
  * @param organizationId Optional organization ID
  * @returns User profile data
  */
@@ -75,39 +104,26 @@ export const getProfile = async (
   organizationId?: string
 ): Promise<User> => {
   const headers: Record<string, string> = {};
+  if (accessToken) headers.Authorization = `Bearer ${accessToken}`;
+  if (organizationId) headers["X-Organization-ID"] = organizationId;
 
-  if (accessToken) {
-    headers.Authorization = `Bearer ${accessToken}`;
-  }
-
-  if (organizationId) {
-    headers["X-Organization-ID"] = organizationId;
-  }
-
-  const response = await copperxAPI.get<ApiResponse<User>>("/api/auth/me", {
+  const response: User = await copperxAPI.get<User>("/api/auth/me", {
     headers,
   });
-
-  return response.data;
+  return response;
 };
 
 /**
  * Get the user's KYC status
- * @param accessToken Optional access token (will use default if not provided)
+ * @param accessToken Optional access token
  * @returns KYC status information
  */
 export const getKYCStatus = async (accessToken?: string): Promise<KYC[]> => {
   const headers: Record<string, string> = {};
+  if (accessToken) headers.Authorization = `Bearer ${accessToken}`;
 
-  if (accessToken) {
-    headers.Authorization = `Bearer ${accessToken}`;
-  }
-
-  const response = await copperxAPI.get<ApiResponse<KYC[]>>("/api/kycs", {
-    headers,
-  });
-
-  return response.data;
+  const response: KYC[] = await copperxAPI.get<KYC[]>("/api/kycs", { headers });
+  return response;
 };
 
 /**

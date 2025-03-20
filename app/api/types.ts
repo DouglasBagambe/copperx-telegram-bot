@@ -15,6 +15,7 @@ export interface ApiResponse<T> {
 
 // User Types
 export interface User {
+  [x: string]: string;
   id: string;
   firstName: string;
   lastName: string;
@@ -96,6 +97,7 @@ export interface Payee {
 
 // Session Types
 export interface UserSession {
+  defaultWalletInfo: any;
   accessToken: string;
   refreshToken: string;
   expireAt: string;

@@ -39,6 +39,15 @@ export const clearSession = (chatId: number): void => {
   delete sessions[chatId];
 };
 
+// export const clearSession = (chatId: number) => {
+//   sessions[chatId] = {
+//     accessToken: "",
+//     refreshToken: "",
+//     expireAt: "",
+//     organizationId: "0",
+//   }; // Clear all session data
+// };
+
 /**
  * Check if a user is authenticated
  * @param chatId Telegram chat ID
