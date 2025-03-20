@@ -4,9 +4,9 @@
   "private": true,
   "type": "commonjs",
   "scripts": {
-    "dev:bot": "ts-node --project tsconfig.bot.json index.ts",
-    "start:bot": "node dist/index.js",
-    "build:bot": "tsc --project tsconfig.bot.json",
+    "dev": "ts-node --project tsconfig.bot.json index.ts",
+    "start": "node dist/index.js",
+    "build": "tsc --project tsconfig.bot.json",
     "next:dev": "next dev",
     "next:build": "next build",
     "next:start": "next start"
