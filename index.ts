@@ -53,7 +53,7 @@ if (NODE_ENV !== "production") {
       webhook: {
         domain:
           process.env.RENDER_EXTERNAL_URL ||
-          "https://copperx-telegram-bot-1ez7.onrender.com",
+          "https://copperx-telegram-bot-408r.onrender.com",
         port: Number(PORT),
       },
     })
