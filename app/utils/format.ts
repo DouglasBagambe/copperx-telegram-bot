@@ -7,11 +7,12 @@
  * @returns Formatted currency string
  */
 export const formatCurrency = (
-  amount: string | number,
+  amount: string | number | undefined,
   currency: string = "USDC"
 ): string => {
-  const numAmount = typeof amount === "string" ? parseFloat(amount) : amount;
-  return `${numAmount.toFixed(2)} ${currency}`;
+  const numAmount =
+    typeof amount === "string" ? parseFloat(amount) : amount ?? 0;
+  return `${isNaN(numAmount) ? "0.00" : numAmount.toFixed(2)} ${currency}`;
 };
 
 /**

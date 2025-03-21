@@ -20,5 +20,9 @@ export const loadEnv = () => {
     PUSHER_APP_KEY: process.env.PUSHER_APP_KEY || "e089376087cac1a62785",
     PUSHER_APP_CLUSTER: process.env.PUSHER_APP_CLUSTER || "ap1",
     NODE_ENV: process.env.NODE_ENV || "development",
+    PORT: process.env.PORT || "3000",
+    RENDER_EXTERNAL_URL:
+      process.env.RENDER_EXTERNAL_URL ||
+      "https://copperx-telegram-bot-1ez7.onrender.com",
   };
 };

@@ -112,21 +112,40 @@ export const getProfile = async (
       headers,
     });
 
-    // Check if the response itself contains user data
-    if (response && response.name !== undefined) {
-      return response;
+    console.log("Raw profile response:", response); // Debug log
+    let userData: User;
+    if (response && typeof response === "object" && "data" in response) {
+      userData = response.data as unknown as User;
+    } else if (response && typeof response === "object") {
+      userData = response as User;
+    } else {
+      throw new Error("Invalid profile response structure");
     }
+    const firstName = userData.firstName ?? "";
+    const lastName = userData.lastName ?? "";
+    return {
+      ...userData,
+      name:
+        firstName || lastName
+          ? `${firstName} ${lastName}`.trim()
+          : "Unknown User",
+    };
+
+    // // Check if the response itself contains user data
+    // if (response && response.name !== undefined) {
+    //   return response;
+    // }
 
     // Fallback in case the structure is response.data
-    if (
-      response.data &&
-      typeof response.data === "object" &&
-      (response.data as User).name !== undefined
-    ) {
-      return response.data;
-    }
+    // if (
+    //   response.data &&
+    //   typeof response.data === "object" &&
+    //   (response.data as User).name !== undefined
+    // ) {
+    //   return response.data;
+    // }
 
-    return response; // Return whatever we got as a last resort
+    // return response; // Return whatever we got as a last resort
   } catch (error: any) {
     console.error("Error in getProfile:", error.response?.data || error);
     const errorMessage =

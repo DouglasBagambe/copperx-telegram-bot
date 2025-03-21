@@ -50,7 +50,7 @@ const formatProfile = (profile: any) => {
 *👤 Profile Information* 🌟
 **Name**: ${profile.name || "N/A"}
 **Email**: ${profile.email || "N/A"}
-**Organization**: ${profile.organization?.name || "N/A"}
+**Organization ID**: ${profile.organizationId || "N/A"}
 **KYC Status**: ${profile.kycStatus || "Unknown"}
 `;
 };
@@ -90,14 +90,14 @@ const showLoadingAnimation = async (ctx: MyContext, message: string) => {
         );
         currentText = newText;
       } catch (error) {
-        // Ignore "message is not modified" errors, but log other errors
         if (!(error as any).message.includes("message is not modified")) {
           console.error("Error updating loading message:", error);
+          clearInterval(interval); // Stop on error to avoid rate limiting
         }
       }
     }
     i++;
-  }, 500);
+  }, 1000); // Increased to 1 second
   return { loadingMsg, interval };
 };
 
@@ -125,7 +125,10 @@ const fetchProfile = async (ctx: MyContext) => {
     clearInterval(interval);
     await ctx.deleteMessage(loadingMsg.message_id);
     await ctx.replyWithMarkdown(formatProfile(profile), {
-      reply_markup: mainMenuKeyboard().reply_markup,
+      // reply_markup: mainMenuKeyboard().reply_markup,
+      reply_markup: Markup.inlineKeyboard([
+        Markup.button.callback("Menu 📋", "show_menu"),
+      ]).reply_markup,
     });
   } catch (error) {
     console.error("Profile error:", error);
@@ -161,7 +164,10 @@ const fetchKYCStatus = async (ctx: MyContext) => {
     clearInterval(interval);
     await ctx.deleteMessage(loadingMsg.message_id);
     await ctx.replyWithMarkdown(message, {
-      reply_markup: mainMenuKeyboard().reply_markup,
+      // reply_markup: mainMenuKeyboard().reply_markup,
+      reply_markup: Markup.inlineKeyboard([
+        Markup.button.callback("Menu 📋", "show_menu"),
+      ]).reply_markup,
     });
   } catch (error) {
     console.error("KYC error:", error);
@@ -206,7 +212,10 @@ const fetchBalance = async (ctx: MyContext) => {
     clearInterval(interval);
     await ctx.deleteMessage(loadingMsg.message_id);
     await ctx.replyWithMarkdown(message, {
-      reply_markup: mainMenuKeyboard().reply_markup,
+      // reply_markup: mainMenuKeyboard().reply_markup,
+      reply_markup: Markup.inlineKeyboard([
+        Markup.button.callback("Menu 📋", "show_menu"),
+      ]).reply_markup,
     });
   } catch (error) {
     console.error("Balance error:", error);
@@ -247,7 +256,10 @@ const fetchDepositInfo = async (ctx: MyContext) => {
     clearInterval(interval);
     await ctx.deleteMessage(loadingMsg.message_id);
     await ctx.replyWithMarkdown(message, {
-      reply_markup: mainMenuKeyboard().reply_markup,
+      // reply_markup: mainMenuKeyboard().reply_markup,
+      reply_markup: Markup.inlineKeyboard([
+        Markup.button.callback("Menu 📋", "show_menu"),
+      ]).reply_markup,
     });
   } catch (error) {
     console.error("Deposit error:", error);
@@ -294,7 +306,10 @@ const fetchHistory = async (ctx: MyContext) => {
     clearInterval(interval);
     await ctx.deleteMessage(loadingMsg.message_id);
     await ctx.replyWithMarkdown(message, {
-      reply_markup: mainMenuKeyboard().reply_markup,
+      // reply_markup: mainMenuKeyboard().reply_markup,
+      reply_markup: Markup.inlineKeyboard([
+        Markup.button.callback("Menu 📋", "show_menu"),
+      ]).reply_markup,
     });
   } catch (error) {
     console.error("History error:", error);
@@ -368,7 +383,10 @@ const fetchDashboard = async (ctx: MyContext) => {
     clearInterval(interval);
     await ctx.deleteMessage(loadingMsg.message_id);
     await ctx.replyWithMarkdown(message, {
-      reply_markup: mainMenuKeyboard().reply_markup,
+      // reply_markup: mainMenuKeyboard().reply_markup,
+      reply_markup: Markup.inlineKeyboard([
+        Markup.button.callback("Menu 📋", "show_menu"),
+      ]).reply_markup,
     });
   } catch (error) {
     console.error("Dashboard error:", error);
@@ -489,24 +507,36 @@ export function setupCommands(bot: Telegraf<MyContext>) {
 
   // /start
   bot.command("start", async (ctx) => {
-    const session = getSession(ctx.chat!.id);
-    const welcomeBanner = `
-*🌟 Welcome to CopperX Payout Bot 🌟*
-
-💸 **Manage your crypto payouts with ease!**
-
-${
-  session?.accessToken
-    ? "🚀 Welcome back! What would you like to do today?"
-    : "🔐 Please login to get started."
-}
-    `;
-    const keyboard = session?.accessToken
-      ? mainMenuKeyboard()
-      : Markup.inlineKeyboard([[Markup.button.callback("🔐 Login", "login")]]);
-    await ctx.replyWithMarkdown(welcomeBanner, {
-      reply_markup: keyboard.reply_markup,
-    });
+    try {
+      const session = getSession(ctx.chat!.id);
+      const welcomeBanner = `
+  *🌟 Welcome to CopperX Payout Bot 🌟*
+  
+  💸 **Manage your crypto payouts with ease!**
+  
+  🔐 Please login to get started.
+      `;
+      const keyboard = session?.accessToken
+        ? mainMenuKeyboard()
+        : Markup.inlineKeyboard([
+            [Markup.button.callback("🔐 Login", "login")],
+          ]);
+      await ctx.replyWithMarkdown(welcomeBanner, {
+        reply_markup: keyboard.reply_markup,
+      });
+    } catch (error: any) {
+      if (error.response?.error_code === 429) {
+        const retryAfter = error.response.parameters.retry_after || 60;
+        await ctx.reply(
+          `⚠️ Telegram rate limit hit. Please wait ${retryAfter} seconds and try again.`
+        );
+        return;
+      }
+      console.error("Error in /start command:", error);
+      await ctx.reply(
+        "❌ An error occurred while starting the bot. Please try again later."
+      );
+    }
   });
 
   // /help
@@ -532,7 +562,10 @@ ${
 *💬 Support*: [Join our community!](https://t.me/copperxcommunity/2183)
     `;
     await ctx.replyWithMarkdown(helpText, {
-      reply_markup: mainMenuKeyboard().reply_markup,
+      // reply_markup: mainMenuKeyboard().reply_markup,
+      reply_markup: Markup.inlineKeyboard([
+        Markup.button.callback("Menu 📋", "show_menu"),
+      ]).reply_markup,
     });
   });
 
@@ -572,7 +605,10 @@ ${
       if (!Array.isArray(wallets) || wallets.length === 0) {
         clearInterval(interval);
         await ctx.deleteMessage(loadingMsg.message_id);
-        return ctx.reply("🏦 No wallets found.", mainMenuKeyboard());
+        return ctx.reply(
+          "🏦 No wallets found. Please add a wallet on the Copperx platform.",
+          mainMenuKeyboard()
+        );
       }
       clearInterval(interval);
       await ctx.deleteMessage(loadingMsg.message_id);
@@ -683,7 +719,10 @@ ${
 *💬 Support*: [Join our community!](https://t.me/copperxcommunity/2183)
       `;
       await ctx.replyWithMarkdown(helpText, {
-        reply_markup: mainMenuKeyboard().reply_markup,
+        // reply_markup: mainMenuKeyboard().reply_markup,
+        reply_markup: Markup.inlineKeyboard([
+          Markup.button.callback("Menu 📋", "show_menu"),
+        ]).reply_markup,
       });
     } else if (data.startsWith("setdefault_")) {
       const walletId = data.split("_")[1];
@@ -727,6 +766,8 @@ ${
     } else if (data === "history") {
       await fetchHistory(ctx);
     } else if (data === "main_menu") {
+      await ctx.reply("🌟 Main Menu:", mainMenuKeyboard());
+    } else if (data === "show_menu") {
       await ctx.reply("🌟 Main Menu:", mainMenuKeyboard());
     }
   });

@@ -10,10 +10,28 @@ import { ApiResponse, Wallet, WalletBalance } from "./types";
  * @returns Array of wallet objects
  */
 export const getWallets = async (accessToken: string): Promise<Wallet[]> => {
-  const response = await copperxAPI.get<ApiResponse<Wallet[]>>("/api/wallets", {
+  const response = await copperxAPI.get("/api/wallets", {
     headers: { Authorization: `Bearer ${accessToken}` },
   });
-  return response.data;
+  let wallets: Wallet[] = [];
+  if (Array.isArray(response)) {
+    wallets = response as Wallet[];
+  } else if (
+    response &&
+    typeof response === "object" &&
+    "data" in response &&
+    Array.isArray((response as any).data)
+  ) {
+    wallets = (response as any).data as Wallet[];
+  } else {
+    throw new Error("Invalid wallets response structure");
+  }
+  // Ensure walletAddress and network are strings
+  return wallets.map((wallet) => ({
+    ...wallet,
+    walletAddress: wallet.walletAddress?.toString() ?? "",
+    network: wallet.network?.toString() ?? "Unknown",
+  }));
 };
 
 /**
@@ -24,13 +42,29 @@ export const getWallets = async (accessToken: string): Promise<Wallet[]> => {
 export const getWalletBalances = async (
   accessToken: string
 ): Promise<WalletBalance[]> => {
-  const response = await copperxAPI.get<ApiResponse<WalletBalance[]>>(
-    "/api/wallets/balances",
-    {
-      headers: { Authorization: `Bearer ${accessToken}` },
-    }
-  );
-  return response.data;
+  const response = await copperxAPI.get("/api/wallets/balances", {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
+  let balances: WalletBalance[] = [];
+  if (Array.isArray(response)) {
+    balances = response as WalletBalance[];
+  } else if (
+    response &&
+    typeof response === "object" &&
+    "data" in response &&
+    Array.isArray((response as any).data)
+  ) {
+    balances = (response as any).data as WalletBalance[];
+  } else {
+    throw new Error("Invalid wallet balances response structure");
+  }
+  // Ensure balance fields are strings
+  return balances.map((balance) => ({
+    ...balance,
+    balance: balance.balance?.toString() ?? "0",
+    availableBalance: balance.availableBalance?.toString() ?? "0",
+    lockedBalance: balance.lockedBalance?.toString() ?? "0",
+  }));
 };
 
 /**

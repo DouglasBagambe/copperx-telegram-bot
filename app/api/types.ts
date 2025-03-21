@@ -15,7 +15,8 @@ export interface ApiResponse<T> {
 
 // User Types
 export interface User {
-  [x: string]: string;
+  data: boolean;
+  // [x: string]: string;
   id: string;
   firstName: string;
   lastName: string;
@@ -25,6 +26,7 @@ export interface User {
   status: string;
   createdAt: string;
   updatedAt: string;
+  name?: string;
 }
 
 // Wallet Types

@@ -1,54 +1,43 @@
 # CopperX Telegram Bot
 
-A Telegram bot for managing crypto payouts with Copperx, built for the Superteam Earn "Telegram Bot for Copperx Payout 🤖 - Build with AI" bounty.
+A Telegram bot for managing USDC payouts via Copperx, built for the Superteam Earn "Telegram Bot for Copperx Payout 🤖 - Build with AI" bounty.
+
+## Overview
+
+This bot integrates with Copperx Payout's API to enable users to deposit, withdraw, and transfer USDC directly through Telegram. Built with TypeScript/Node.js, it features secure authentication, wallet management, fund transfers, and real-time deposit notifications.
 
 ## Features
 
-- 🔐 **Authentication & Account Management**: Login, view profile, check KYC/KYB status.
-- 👛 **Wallet Management**: View balances, set default wallet, deposit funds, view transaction history.
-- 💸 **Fund Transfers**: Send USDC to email or wallet, withdraw to bank, view recent transactions.
-- 🔔 **Deposit Notifications**: Real-time notifications via Pusher.
-- 💬 **Bot Interaction**: Intuitive commands, interactive menus, inline keyboards, help command.
+- 🔐 **Auth & Account**: Login, view profile, check KYC status.
+- 👛 **Wallets**: View balances, set default wallet, deposit funds, view history.
+- 💸 **Transfers**: Send USDC to email/wallet, withdraw to bank, view recent transactions.
+- 🔔 **Notifications**: Real-time deposit alerts via Pusher.
+- 💬 **UX**: Intuitive commands, inline keyboards, interactive menus.
 
-## Setup Instructions
+## Live Demo
 
-1. Clone the repository:
+Try it: [@CopperxPayoutBot](https://t.me/CopperxPayout_01_Bot)  
+Deployed on Render: [https://copperx-telegram-bot-1ez7.onrender.com](https://copperx-telegram-bot-1ez7.onrender.com)
 
-   ```bash
-   git clone https://github.com/your-username/copperx-telegram-bot.git
-   cd copperx-telegram-bot
-   Install dependencies:
-   bash
-   ```
+## Setup
 
-2. yarn install
-   Set up environment variables in a .env file:
+1. Clone: `git clone <repo-url>`
+2. Install: `yarn install`
+3. Add `.env`:
+   TELEGRAM_BOT_TOKEN=<your-bot-token>
+   COPPERX_API_BASE_URL=https://income-api.copperx.io
+   PUSHER_APP_KEY=e089376087cac1a62785
+   PUSHER_APP_CLUSTER=ap1
+4. Run: `yarn dev`
+5. Deploy: See `docs/setup.md` for Render deployment.
 
-   ```bash
-   TELEGRAM_BOT_TOKEN=your-telegram-bot-token
-   COPPERX_API_KEY=your-copperx-api-key
-   VITE_PUSHER_KEY=e089376087cac1a62785
-   VITE_PUSHER_CLUSTER=ap1
-   bash
-   ```
+## Documentation
 
-3. Run the bot locally:
-   yarn dev
-   Deploy to Render (see docs/setup.md for detailed instructions).
-4. Live Demo
-   Interact with the bot: [CopperX](https://t.me/CopperxPayout_01_Bot)
+- Setup: `docs/setup.md`
+- Commands: `docs/commands.md`
+- API: `docs/api.md`
+- Troubleshooting: `docs/troubleshooting.md`
 
-5. Documentation
-   Setup Instructions: docs/api.md
-   Command Reference: docs/commands.md
-   API Integration Details: docs/setup.md
+## Submission Notes
 
-## Local Development
-
-1. Clone the repository and install dependencies as shown in the README.
-2. Set up environment variables in a `.env` file (see README for details).
-3. Run the bot:
-
-   ```bash
-   yarn dev
-   ```
+Built with TypeScript/Node.js, using Cursor and ChatGPT for assistance. Code is clean, type-safe, and well-documented with a comprehensive Git history. Security best practices are followed, including secure session management and no plaintext passwords.
