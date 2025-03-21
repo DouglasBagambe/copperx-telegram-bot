@@ -1,0 +1,17 @@
+services:
+  - type: web
+    runtime: node
+    name: copperx-telegram-bot
+    buildCommand: yarn install && yarn build
+    startCommand: yarn start
+    envVars:
+      - key: TELEGRAM_BOT_TOKEN
+        sync: false
+      - key: COPPERX_API_BASE_URL
+        sync: false
+      - key: PUSHER_APP_KEY
+        sync: false
+      - key: PUSHER_APP_CLUSTER
+        sync: false
+      - key: NODE_ENV
+        value: production

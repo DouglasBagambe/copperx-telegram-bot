@@ -15,5 +15,11 @@
     }
   },
   "include": ["**/*.ts"],
-  "exclude": ["node_modules", ".next"]
+  "exclude": [
+    "node_modules",
+    ".next",
+    "next.config.ts",
+    "app/layout.tsx",
+    "app/page.tsx"
+  ]
 }
