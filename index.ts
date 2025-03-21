@@ -1,5 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-// index.ts
+import http from "http";
 import { Context, MiddlewareFn, Telegraf, session } from "telegraf";
 import { loadEnv } from "./app/config/env";
 import { MyContext, setupCommands } from "./app/bot/commands";
@@ -21,21 +20,16 @@ bot.use(stage.middleware() as MiddlewareFn<Context<Update>>);
 // Setup commands and handlers after all middlewares are applied
 setupCommands(bot);
 
-// Export a handler for Render (webhook mode)
-export default async (req: any, res: any) => {
-  try {
-    if (req.method === "POST") {
-      // Handle Telegram webhook updates
-      await bot.handleUpdate(req.body);
-      res.status(200).end();
-    } else {
-      res.status(200).send("CopperX Telegram Bot");
-    }
-  } catch (err) {
-    console.error("Webhook error:", err);
-    res.status(500).send("Internal Server Error");
-  }
-};
+// Create HTTP server for Render
+const server = http.createServer((req, res) => {
+  res.writeHead(200, { "Content-Type": "text/plain" });
+  res.end("CopperX Telegram Bot is running!");
+});
+
+const PORT = process.env.PORT || 3000;
+server.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
+});
 
 // For local development, use polling mode
 if (NODE_ENV !== "production") {
@@ -52,4 +46,21 @@ if (NODE_ENV !== "production") {
   // Handle graceful shutdown
   process.once("SIGINT", () => bot.stop("SIGINT"));
   process.once("SIGTERM", () => bot.stop("SIGTERM"));
+} else {
+  // For production, use webhook mode
+  bot
+    .launch({
+      webhook: {
+        domain:
+          process.env.RENDER_EXTERNAL_URL ||
+          "https://copperx-telegram-bot-1ez7.onrender.com",
+        port: Number(PORT),
+      },
+    })
+    .then(() => {
+      console.log("Bot started in webhook mode");
+    })
+    .catch((err) => {
+      console.error("Failed to start bot in webhook mode:", err);
+    });
 }
