@@ -107,10 +107,39 @@ export const getProfile = async (
   if (accessToken) headers.Authorization = `Bearer ${accessToken}`;
   if (organizationId) headers["X-Organization-ID"] = organizationId;
 
-  const response: User = await copperxAPI.get<User>("/api/auth/me", {
-    headers,
-  });
-  return response;
+  try {
+    const response = await copperxAPI.get<User>("/api/auth/me", {
+      headers,
+    });
+
+    // Check if the response itself contains user data
+    if (response && response.name !== undefined) {
+      return response;
+    }
+
+    // Fallback in case the structure is response.data
+    if (
+      response.data &&
+      typeof response.data === "object" &&
+      (response.data as User).name !== undefined
+    ) {
+      return response.data;
+    }
+
+    return response; // Return whatever we got as a last resort
+  } catch (error: any) {
+    console.error("Error in getProfile:", error.response?.data || error);
+    const errorMessage =
+      error.response?.data?.message || error.message || "Failed to get profile";
+
+    if (error.code === "ETIMEDOUT" || error.code === "ENETUNREACH") {
+      throw new Error(
+        "Network error: Unable to reach the server. Please check your internet connection and try again."
+      );
+    }
+
+    throw new Error(errorMessage);
+  }
 };
 
 /**
