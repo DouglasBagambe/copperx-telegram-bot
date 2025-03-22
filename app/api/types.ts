@@ -38,9 +38,11 @@ export interface Wallet {
   name?: string;
   createdAt: string;
   updatedAt: string;
+  address: string;
 }
 
 export interface WalletBalance {
+  name: string;
   id: string;
   walletId: string;
   network: string;

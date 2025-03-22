@@ -31,6 +31,7 @@ interface CustomSession {
     id: string;
     name: string;
     network: string;
+    address: string;
   };
   tempData?: {
     recipient?: string;
@@ -59,7 +60,10 @@ const formatBalance = (balance: any, index: number) => {
   return `${index}. **${balance.network}**: ${formatCurrency(
     balance.balance,
     balance.symbol
-  )}\n`;
+  )} 
+**Name**: ${balance.name || "Wallet"}
+**ID**: ${balance.id || "N/A"}
+**Address**: \`${formatWalletAddress(balance.address || "N/A")}\`\n\n`;
 };
 
 const formatTransaction = (tx: any, index: number) => {
@@ -104,7 +108,7 @@ const showLoadingAnimation = async (ctx: MyContext, message: string) => {
 // Function to get wallet details by ID
 const getWalletDetails = async (accessToken: string, walletId: string) => {
   const wallets = await walletsAPI.getWallets(accessToken);
-  return wallets.find((w: any) => w.id === walletId);
+  return wallets.find((w: any) => w.name === walletId);
 };
 
 // Shared logic for commands and callbacks
@@ -205,9 +209,16 @@ const fetchBalance = async (ctx: MyContext) => {
 
     // Add default wallet info if available
     if (session.defaultWalletInfo) {
-      message += `*🏦 Default Wallet*: ${session.defaultWalletInfo.name} (${session.defaultWalletInfo.network})\n\n`;
+      message += `*🏦 Default Wallet*\n**Name**: ${
+        session.defaultWalletInfo.name
+      }\n**Network**: ${session.defaultWalletInfo.network}\n**ID**: ${
+        session.defaultWalletInfo.id
+      }\n**Address**: \`${formatWalletAddress(
+        session.defaultWalletInfo.address || "N/A"
+      )}\`\n\n`;
     }
 
+    message += "*Available Wallets:*\n";
     balances.forEach((b, i) => (message += formatBalance(b, i + 1)));
     clearInterval(interval);
     await ctx.deleteMessage(loadingMsg.message_id);
@@ -356,7 +367,13 @@ const fetchDashboard = async (ctx: MyContext) => {
 
     // Display default wallet if available
     if (session.defaultWalletInfo) {
-      message += `**🏦 Default Wallet**\n${session.defaultWalletInfo.name} (${session.defaultWalletInfo.network})\n\n`;
+      message += `**🏦 Default Wallet**\n**Name**: ${
+        session.defaultWalletInfo.name
+      }\n**Network**: ${session.defaultWalletInfo.network}\n**ID**: ${
+        session.defaultWalletInfo.id
+      }\n**Address**: \`${formatWalletAddress(
+        session.defaultWalletInfo.address || "N/A"
+      )}\`\n\n`;
     } else {
       message +=
         "**🏦 Default Wallet**\nNot set. Use /setdefault to set one.\n\n";
@@ -367,9 +384,12 @@ const fetchDashboard = async (ctx: MyContext) => {
     if (!balances || !Array.isArray(balances) || balances.length === 0) {
       message += "No wallets found.\n";
     } else {
-      balances
-        .slice(0, 3)
-        .forEach((b, i) => (message += formatBalance(b, i + 1)));
+      balances.slice(0, 3).forEach((b, i) => {
+        message += `${i + 1}. **${b.network}**: ${formatCurrency(
+          b.balance,
+          b.symbol
+        )} (${b.name || "Wallet"})\n`;
+      });
     }
 
     // Check if txs exists and is an array
@@ -432,6 +452,7 @@ const setDefaultWallet = async (ctx: MyContext, walletId: string) => {
         id: walletId,
         name: walletDetails?.name || "Wallet",
         network: walletDetails?.network || "Unknown",
+        address: walletDetails?.address || "",
       },
     });
 
@@ -440,7 +461,9 @@ const setDefaultWallet = async (ctx: MyContext, walletId: string) => {
     await ctx.reply(
       `🏦 Default wallet set to: ${walletDetails?.name || "Wallet"} (${
         walletDetails?.network || "Unknown"
-      }) ✅`,
+      }) ✅\nWallet ID: ${walletId}\nAddress: ${formatWalletAddress(
+        walletDetails?.address || "N/A"
+      )}`,
       mainMenuKeyboard()
     );
   } catch (error) {
